@@ -2,12 +2,13 @@ var express = require('express')
   , routes = require('./routes')
   , http = require('http')
   , path = require('path')
-  , jsdom = require('jsdom');
+  , fs = require('fs')
+  , nowjs = require('now');
 
 var app = express();
 
 app.configure(function(){
-  app.set('port', 3001);
+  app.set('port', 3004);
   app.set('views', __dirname + '/views');
   app.set('view engine', 'jade');
   app.use(express.favicon());
@@ -26,6 +27,7 @@ app.engine(".html", require("jade").__express);
 
 app.get('/', function(req, res) {
   res.render('test.html');
+  res.end();
 });
 
 app.get('/searchbylink', function(req, res) {
@@ -39,7 +41,6 @@ app.get('/searchbylink', function(req, res) {
   url += "&filename=";
   url += "&image_url=" + encodeURIComponent(req.query["image_url"]);
 
-  console.log(url);
   request({
     method: 'GET'
   , url: url
@@ -58,7 +59,6 @@ app.get('/searchbylink', function(req, res) {
         for(var i = 1; i < key.length; i++) {
           url += encodeURIComponent("+" + key[1]);
         }
-        console.log(url);
         request({
           method: 'GET'
         , url: url
@@ -72,21 +72,14 @@ app.get('/searchbylink', function(req, res) {
   });
 });
 
-app.get('/searchbyfile', function(req, res) {
-  var options = {
-    host: "http://www.google.com/searchbyimage/upload"
-   ,path: "/searchbyimage/upload"
-   ,method: "POST"
-  }
+var server = http.createServer(app);
 
-  var req = http.request(options, function (res) {
-    res.setEncoding('utf8');
-    res.on('data', function (chunk) {
-      console.log("body: " + chunk);
-    })
-  })
-});
-
-http.createServer(app).listen(app.get('port'), function(){
+server.listen(app.get('port'), function(){
   console.log("Express server listening on port " + app.get('port'));
 });
+
+var nowserver = nowjs.initialize(server);
+nowserver.now.distributeMessage = function(url){
+  console.log("rec");
+  nowserver.now.receiveMessage(url);
+};
