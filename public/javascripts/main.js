@@ -10,37 +10,38 @@ function changeImage() {
   elem.style.backgroundImage = nextIndex;
 }
 $(document).ready(function() {
-  
-  console.log("loaded");
 
   now.receiveMessage = function(url) {
-    for(var i = 9; i > 1; i--) {
-      var curr = document.getElementById("s" + i);
-      var prev = document.getElementById("s" + (i - 1));
-      curr.innerHTML = prev.innerHTML;
-    }
-    var elem = document.getElementById("s1");
-    elem.innerHTML = ("<a href='/searchbylink?image_url=" + url + "'><img src=\""+url+"\"/\></\>");
-    console.log(elem.innerHTML);
+    changePicture(9, url);
   }
   
   var button = document.getElementById("button");
 
-  console.log(button);
-
   button.onsubmit = function() {
-    console.log("submitted");
     var text = document.getElementById("text").value;
-    console.log("***************" + text);
     now.distributeMessage(text);
   }
-  setInterval("changeImage();", 30000);
+  setInterval("changeImage();", 15000);
 });
 
-var $container = $('#container');
-
-$container.imagesLoaded( function(){
-  $container.masonry({
-    itemSelector : '.cell'
+function changePicture(i, url) {
+  if (i == 1) {
+    var elem = document.getElementById("s1");
+    elem.innerHTML = ("<a href='/searchbylink?image_url=" + url + "'><img src=\""+url+"\"/\></\>");
+    return;
+  }
+  var curr = document.getElementById("s" + i);
+  var prev = document.getElementById("s" + (i - 1));
+  var currImg = curr.getElementsByTagName("img")[0];
+  var prevImg = prev.getElementsByTagName("img")[0];
+  var currA = curr.getElementsByTagName("a")[0];
+  currA.href = '/searchbylink?image_url=' + prevImg.src;
+  $(currImg).fadeOut(150, function() {
+    $(this).attr('src', prevImg.src).bind('onstatechange load', function() {
+      if (this.complete) {
+        $(this).fadeIn(150);
+        changePicture(i - 1, url);
+      }
+    });
   });
-});
+}
